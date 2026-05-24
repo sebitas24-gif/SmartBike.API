@@ -1,20 +1,177 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:SmartBike_Mobile.ViewModels"
              x:Class="SmartBike_Mobile.Views.DashboardPage"
-             Title="Mi Impacto Ambiental">
+             Title=""
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#F0F4F0">
 
-    <Grid RowDefinitions="Auto, *, Auto" Padding="20">
-        <Label Grid.Row="0" Text="{Binding Saludo}" FontSize="20" FontAttributes="Bold"/>
+    <ContentPage.BindingContext>
+        <viewmodels:DashboardViewModel />
+    </ContentPage.BindingContext>
 
-        <Frame Grid.Row="1" BackgroundColor="#2E4053" CornerRadius="15" Margin="0,20">
-            <VerticalStackLayout Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
-                <Label Text="Total CO₂ Evitado" TextColor="#BDC3C7" HorizontalOptions="Center"/>
-                <Label Text="{Binding TotalCo2, StringFormat='{0:F2} kg'}" 
-                       TextColor="#2ECC71" FontSize="40" FontAttributes="Bold"/>
-            </VerticalStackLayout>
-        </Frame>
+    <ScrollView>
+        <VerticalStackLayout Spacing="0">
 
-        <Button Grid.Row="2" Text="Cerrar Sesión" Command="{Binding CerrarSesionCommand}" BackgroundColor="#E74C3C"/>
-    </Grid>
+            <Frame BackgroundColor="#4A148C"
+                   CornerRadius="0"
+                   HasShadow="True"
+                   Padding="20,45,20,25">
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Grid.Column="0" Spacing="3">
+                        <Label Text="¡Bienvenido de vuelta! 👋" TextColor="#CE93D8" FontSize="13"/>
+                        <Label Text="{Binding NombreUsuario}" TextColor="White" FontSize="22" FontAttributes="Bold"/>
+                        <Label Text="{Binding TipoUsuario}" TextColor="#CE93D8" FontSize="13"/>
+                    </VerticalStackLayout>
+                    <Frame Grid.Column="1" BackgroundColor="#6A1B9A" CornerRadius="25"
+                           HeightRequest="50" WidthRequest="50" Padding="0" HasShadow="False" VerticalOptions="Center">
+                        <Label Text="🚲" FontSize="24" HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Frame>
+                </Grid>
+            </Frame>
+
+            <Frame Margin="16,16,16,8" BackgroundColor="#2E7D32" CornerRadius="16" HasShadow="True" Padding="20">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="🌍 Tu Huella de Carbono Hoy" TextColor="#A5D6A7" FontSize="13" FontAttributes="Bold"/>
+                    <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                        <Label Text="{Binding Co2Hoy}" TextColor="White" FontSize="42" FontAttributes="Bold"/>
+                        <Label Text="kg CO₂" TextColor="#A5D6A7" FontSize="16" VerticalOptions="End" Margin="0,0,0,8"/>
+                    </HorizontalStackLayout>
+                    <Label Text="{Binding MensajeImpacto}" TextColor="#C8E6C9" FontSize="13"/>
+                    <Frame BackgroundColor="#1B5E20" CornerRadius="8" HeightRequest="10" Padding="0" HasShadow="False">
+                        <Frame BackgroundColor="#69F0AE" CornerRadius="8" HeightRequest="10"
+                               HorizontalOptions="Start" WidthRequest="{Binding BarraProgreso}" Padding="0" HasShadow="False"/>
+                    </Frame>
+                    <Label Text="{Binding PorcentajeMeta}" TextColor="#A5D6A7" FontSize="11" HorizontalOptions="End"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Grid Margin="16,8,16,8" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                <Frame Grid.Row="0" Grid.Column="0" BackgroundColor="White" CornerRadius="12" HasShadow="True" Padding="15">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="♻️" FontSize="24"/>
+                        <Label Text="{Binding Co2Ahorrado}" TextColor="#2E7D32" FontSize="20" FontAttributes="Bold"/>
+                        <Label Text="kg CO₂ ahorrado" TextColor="#757575" FontSize="11"/>
+                    </VerticalStackLayout>
+                </Frame>
+                <Frame Grid.Row="0" Grid.Column="1" BackgroundColor="White" CornerRadius="12" HasShadow="True" Padding="15">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="🚴" FontSize="24"/>
+                        <Label Text="{Binding DiasBicicleta}" TextColor="#4A148C" FontSize="20" FontAttributes="Bold"/>
+                        <Label Text="días en bici" TextColor="#757575" FontSize="11"/>
+                    </VerticalStackLayout>
+                </Frame>
+                <Frame Grid.Row="1" Grid.Column="0" BackgroundColor="White" CornerRadius="12" HasShadow="True" Padding="15">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="🌳" FontSize="24"/>
+                        <Label Text="{Binding ArbolesEquivalentes}" TextColor="#E65100" FontSize="20" FontAttributes="Bold"/>
+                        <Label Text="árboles equiv." TextColor="#757575" FontSize="11"/>
+                    </VerticalStackLayout>
+                </Frame>
+                <Frame Grid.Row="1" Grid.Column="1" BackgroundColor="White" CornerRadius="12" HasShadow="True" Padding="15">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="🔥" FontSize="24"/>
+                        <Label Text="{Binding RachaActual}" TextColor="#C62828" FontSize="20" FontAttributes="Bold"/>
+                        <Label Text="días de racha" TextColor="#757575" FontSize="11"/>
+                    </VerticalStackLayout>
+                </Frame>
+            </Grid>
+
+            <Frame Margin="16,8,16,8" BackgroundColor="White" CornerRadius="16" HasShadow="True" Padding="20">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="🚗 ¿Cómo llegaste hoy?" TextColor="#212121" FontSize="16" FontAttributes="Bold"/>
+                    <Label Text="Registra tu medio de transporte del día" TextColor="#757575" FontSize="13"/>
+                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
+                        <Frame Grid.Column="0" BackgroundColor="{Binding ColorBicicleta}" CornerRadius="10" Padding="8,10" HasShadow="False">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SeleccionarTransporteCommand}" CommandParameter="1"/>
+                            </Frame.GestureRecognizers>
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="🚲" FontSize="22" HorizontalOptions="Center"/>
+                                <Label Text="Bici" FontSize="10" HorizontalOptions="Center" TextColor="{Binding TextoBicicleta}" FontAttributes="Bold"/>
+                            </VerticalStackLayout>
+                        </Frame>
+                        <Frame Grid.Column="1" BackgroundColor="{Binding ColorBus}" CornerRadius="10" Padding="8,10" HasShadow="False">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SeleccionarTransporteCommand}" CommandParameter="2"/>
+                            </Frame.GestureRecognizers>
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="🚌" FontSize="22" HorizontalOptions="Center"/>
+                                <Label Text="Bus" FontSize="10" HorizontalOptions="Center" TextColor="{Binding TextoBus}" FontAttributes="Bold"/>
+                            </VerticalStackLayout>
+                        </Frame>
+                        <Frame Grid.Column="2" BackgroundColor="{Binding ColorAuto}" CornerRadius="10" Padding="8,10" HasShadow="False">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SeleccionarTransporteCommand}" CommandParameter="3"/>
+                            </Frame.GestureRecognizers>
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="🚗" FontSize="22" HorizontalOptions="Center"/>
+                                <Label Text="Auto" FontSize="10" HorizontalOptions="Center" TextColor="{Binding TextoAuto}" FontAttributes="Bold"/>
+                            </VerticalStackLayout>
+                        </Frame>
+                        <Frame Grid.Column="3" BackgroundColor="{Binding ColorPie}" CornerRadius="10" Padding="8,10" HasShadow="False">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SeleccionarTransporteCommand}" CommandParameter="4"/>
+                            </Frame.GestureRecognizers>
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="🚶" FontSize="22" HorizontalOptions="Center"/>
+                                <Label Text="Pie" FontSize="10" HorizontalOptions="Center" TextColor="{Binding TextoPie}" FontAttributes="Bold"/>
+                            </VerticalStackLayout>
+                        </Frame>
+                    </Grid>
+                    <Button Text="Registrar Transporte" Command="{Binding RegistrarTransporteCommand}"
+                            BackgroundColor="#4A148C" TextColor="White" CornerRadius="10" HeightRequest="45" FontAttributes="Bold"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame Margin="16,8,16,8" BackgroundColor="White" CornerRadius="16" HasShadow="True" Padding="20">
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0" Text="📋 Historial Reciente" TextColor="#212121" FontSize="16" FontAttributes="Bold"/>
+                        <Label Grid.Column="1" Text="Ver todo →" TextColor="#4A148C" FontSize="13">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding VerHistorialCommand}"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </Grid>
+                    <CollectionView ItemsSource="{Binding HistorialReciente}" HeightRequest="160">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="Auto,*,Auto" Padding="0,6" ColumnSpacing="12">
+                                    <Frame Grid.Column="0" BackgroundColor="#F3E5F5" CornerRadius="8"
+                                           WidthRequest="38" HeightRequest="38" Padding="0" HasShadow="False">
+                                        <Label Text="{Binding Icono}" FontSize="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                    </Frame>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                        <Label Text="{Binding Transporte}" TextColor="#212121" FontSize="14" FontAttributes="Bold"/>
+                                        <Label Text="{Binding Fecha}" TextColor="#9E9E9E" FontSize="12"/>
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="2" Text="{Binding Co2, StringFormat='{0} kg'}"
+                                           TextColor="#2E7D32" FontSize="13" FontAttributes="Bold" VerticalOptions="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame Margin="16,8,16,8" BackgroundColor="#FFF8E1" CornerRadius="16" HasShadow="True" Padding="20">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="💡 Recomendación del Día" TextColor="#F57F17" FontSize="14" FontAttributes="Bold"/>
+                    <Label Text="{Binding Recomendacion}" TextColor="#5D4037" FontSize="14" LineBreakMode="WordWrap"/>
+                    <Frame BackgroundColor="#FFE082" CornerRadius="8" Padding="12,8" HasShadow="False">
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="🏆" FontSize="18"/>
+                            <Label Text="{Binding Incentivo}" TextColor="#5D4037" FontSize="13" VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                    </Frame>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Button Text="Cerrar Sesión" Command="{Binding CerrarSesionCommand}"
+                    Margin="16,8,16,24" BackgroundColor="Transparent" TextColor="#9E9E9E" FontSize="13"/>
+
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

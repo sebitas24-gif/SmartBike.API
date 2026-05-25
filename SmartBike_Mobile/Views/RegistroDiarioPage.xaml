@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:SmartBike_Mobile.ViewModels"
+             x:Class="SmartBike_Mobile.Views.RegistroDiarioPage"
+             Title="Registrar Viaje Diario">
+
+    <ContentPage.BindingContext>
+        <viewmodels:RegistroDiarioViewModel />
+    </ContentPage.BindingContext>
+
+    <VerticalStackLayout Padding="30" Spacing="20" VerticalOptions="Center">
+
+        <Label Text="¿Cómo te movilizaste hoy?" 
+               FontSize="20" 
+               FontAttributes="Bold" 
+               HorizontalOptions="Center"/>
+
+        <Picker x:Name="PickerTransporte" 
+                Title="Selecciona el medio de transporte"
+                SelectedItem="{Binding TipoTransporte}">
+            <Picker.ItemsSource>
+                <x:Array Type="{x:Type x:String}">
+                    <x:String>1</x:String>
+                    <x:String>2</x:String>
+                    <x:String>3</x:String>
+                </x:Array>
+            </Picker.ItemsSource>
+        </Picker>
+
+        <Button Text="Guardar Viaje" 
+                Command="{Binding RegistrarViajeCommand}" 
+                BackgroundColor="#27AE60" 
+                TextColor="White"
+                CornerRadius="8"/>
+
+    </VerticalStackLayout>
+</ContentPage>

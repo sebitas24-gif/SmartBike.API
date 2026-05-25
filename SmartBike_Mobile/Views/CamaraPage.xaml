@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:SmartBike_Mobile.ViewModels"
+             x:Class="SmartBike_Mobile.Views.CamaraPage"
+             Title="Cámara IA"
+             Shell.NavBarIsVisible="True"
+             BackgroundColor="#F0F4F0">
+
+    <ContentPage.BindingContext>
+        <viewmodels:CamaraViewModel />
+    </ContentPage.BindingContext>
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="0">
+
+            <Frame BackgroundColor="#1A237E" CornerRadius="0" HasShadow="True" Padding="20,16">
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                        <Label Text="📷 Monitoreo en Tiempo Real" TextColor="White" FontSize="18" FontAttributes="Bold"/>
+                        <Label Text="Detección IA — Entrada Campus UTN" TextColor="#9FA8DA" FontSize="13"/>
+                    </VerticalStackLayout>
+                    <Frame Grid.Column="1" BackgroundColor="{Binding ColorEstado}"
+                           CornerRadius="20" Padding="10,6" HasShadow="False" VerticalOptions="Center">
+                        <Label Text="{Binding EstadoConexion}" TextColor="White" FontSize="11" FontAttributes="Bold"/>
+                    </Frame>
+                </Grid>
+            </Frame>
+
+            <!-- CARGANDO -->
+            <ActivityIndicator IsRunning="{Binding Cargando}" IsVisible="{Binding Cargando}"
+                               Color="#1A237E" HeightRequest="60" Margin="0,20,0,0"/>
+
+            <!-- ERROR -->
+            <Frame IsVisible="{Binding HayError}" Margin="16,16,16,8"
+                   BackgroundColor="#FFEBEE" CornerRadius="12" HasShadow="False" Padding="16">
+                <Label Text="{Binding MensajeError}" TextColor="#C62828" FontSize="13" HorizontalOptions="Center"/>
+            </Frame>
+
+            <!-- CONTADORES -->
+            <Frame Margin="16,16,16,8" BackgroundColor="#0D1B2A" CornerRadius="16" HasShadow="True" Padding="20">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="{Binding UltimaActualizacion}" TextColor="#546E7A" FontSize="11" HorizontalOptions="Center"/>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Frame Grid.Column="0" BackgroundColor="#1B5E20" CornerRadius="12" Padding="16" HasShadow="False">
+                            <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                                <Label Text="🚲" FontSize="32" HorizontalOptions="Center"/>
+                                <Label Text="{Binding ConteoBicicletas}" TextColor="White"
+                                       FontSize="36" FontAttributes="Bold" HorizontalOptions="Center"/>
+                                <Label Text="Bicicletas hoy" TextColor="#A5D6A7" FontSize="12" HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </Frame>
+                        <Frame Grid.Column="1" BackgroundColor="#B71C1C" CornerRadius="12" Padding="16" HasShadow="False">
+                            <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                                <Label Text="🚗" FontSize="32" HorizontalOptions="Center"/>
+                                <Label Text="{Binding ConteoVehiculos}" TextColor="White"
+                                       FontSize="36" FontAttributes="Bold" HorizontalOptions="Center"/>
+                                <Label Text="Vehículos hoy" TextColor="#FFCDD2" FontSize="12" HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </Frame>
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- ÚLTIMAS DETECCIONES -->
+            <Frame Margin="16,8,16,8" BackgroundColor="White" CornerRadius="16" HasShadow="True" Padding="20">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="⚡ Últimas Detecciones" TextColor="#212121" FontSize="16" FontAttributes="Bold"/>
+                    <CollectionView ItemsSource="{Binding UltimasDetecciones}" HeightRequest="220">
+                        <CollectionView.EmptyView>
+                            <Label Text="Sin detecciones aún" TextColor="#BDBDBD"
+                                   FontSize="14" HorizontalOptions="Center" Margin="0,30,0,0"/>
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="Auto,*,Auto" Padding="0,8" ColumnSpacing="12">
+                                    <Frame Grid.Column="0" BackgroundColor="{Binding ColorFondo}" CornerRadius="8"
+                                           WidthRequest="40" HeightRequest="40" Padding="0" HasShadow="False">
+                                        <Label Text="{Binding Icono}" FontSize="20"
+                                               HorizontalOptions="Center" VerticalOptions="Center"/>
+                                    </Frame>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                        <Label Text="{Binding NombreCamara}" TextColor="#212121" FontSize="13" FontAttributes="Bold"/>
+                                        <Label Text="{Binding FechaTexto}" TextColor="#9E9E9E" FontSize="11"/>
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="2" Text="{Binding EstadoTexto}"
+                                           TextColor="{Binding ColorEstado}" FontSize="12"
+                                           FontAttributes="Bold" VerticalOptions="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Button Text="🔄 Actualizar" Command="{Binding ActualizarCommand}"
+                    Margin="16,8,16,24" BackgroundColor="#1A237E" TextColor="White"
+                    CornerRadius="12" HeightRequest="50" FontAttributes="Bold"/>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

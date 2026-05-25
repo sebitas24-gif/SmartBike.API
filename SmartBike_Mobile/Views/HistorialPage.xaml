@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="SmartBike_Mobile.Views.HistorialPage"
+             Title="Mi Historial de Movilidad">
+
+    <Grid RowDefinitions="Auto, *" Padding="15">
+
+        <Label Grid.Row="0" 
+               Text="Historial de registros" 
+               FontSize="20" 
+               FontAttributes="Bold" 
+               Margin="0,0,0,10" 
+               TextColor="#2C3E50"/>
+
+        <CollectionView Grid.Row="1" 
+                        ItemsSource="{Binding Historiales}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="0,5" 
+                           CornerRadius="10" 
+                           HasShadow="False" 
+                           BorderColor="#E0E0E0">
+                        <Grid ColumnDefinitions="Auto, *, Auto" VerticalOptions="Center">
+
+                            <Image Grid.Column="0" Source="bike_icon.png" WidthRequest="40" HeightRequest="40"/>
+
+                            <VerticalStackLayout Grid.Column="1" Margin="10,0">
+                                <Label Text="{Binding TransporteDetalle}" FontAttributes="Bold" FontSize="16"/>
+                                <Label Text="{Binding Fecha, StringFormat='{0:dd/MM/yyyy}'}" FontSize="12" TextColor="Gray"/>
+                            </VerticalStackLayout>
+
+                            <Label Grid.Column="2" 
+                                   Text="{Binding Co2Acumulado, StringFormat='-{0:F2} kg'}" 
+                                   TextColor="#27AE60" 
+                                   FontAttributes="Bold" 
+                                   VerticalOptions="Center"/>
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+            <CollectionView.EmptyView>
+                <Label Text="No se encontraron registros históricos." 
+                       HorizontalOptions="Center" 
+                       VerticalOptions="Center" 
+                       Margin="20"/>
+            </CollectionView.EmptyView>
+        </CollectionView>
+    </Grid>
+</ContentPage>

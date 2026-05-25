@@ -4,11 +4,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
-
+using SmartBike_Mobile.Models;
 namespace SmartBike_Mobile.ViewModels
 {
     public class HistorialItem
@@ -19,36 +20,69 @@ namespace SmartBike_Mobile.ViewModels
         public string Co2 { get; set; } = string.Empty;
     }
 
+    // DTO que coincide EXACTAMENTE con lo que devuelve el API
+    public class RegistroDiarioResponseDto
+    {
+        public int IdReg { get; set; }
+        public DateTime Fecha { get; set; }
+        public decimal Co2Generado { get; set; }
+        public string UsuarioNombre { get; set; } = string.Empty;
+        public string TransporteDetalle { get; set; } = string.Empty;
+        public string CamaraCodigo { get; set; } = string.Empty;
+    }
+
+    public class RegistroDiarioCreateDto
+    {
+        public string IdUsuario { get; set; } = string.Empty;
+        public int IdTipoTransporte { get; set; }
+        public int IdCamara { get; set; } = 1;
+        public decimal Co2Generado { get; set; }
+        public DateTime Fecha { get; set; } = DateTime.Now;
+    }
+
     public class DashboardViewModel : INotifyPropertyChanged
     {
-        private string _nombreUsuario = "Usuario";
-        private string _tipoUsuario = "Estudiante";
+        private const string BaseUrl = "http://192.168.0.103:5023/api/";
+        private readonly HttpClient _http;
+
+        private string _nombreUsuario = string.Empty;
+        private string _tipoUsuario = string.Empty;
         private string _co2Hoy = "0.0";
-        private string _mensajeImpacto = "¡Sin registros hoy! Usa bicicleta 🚲";
-        private double _barraProgreso = 0;
-        private string _porcentajeMeta = "0% de tu meta diaria";
-        private string _co2Ahorrado = "0.0";
-        private string _diasBicicleta = "0";
-        private string _arbolesEquivalentes = "0";
-        private string _rachaActual = "0";
+        private string _mensajeImpacto = "¡Registra tu transporte de hoy! 🚲";
+        private string _co2Ahorrado = "—";
+        private string _diasBicicleta = "—";
+        private string _arbolesEquivalentes = "—";
+        private string _rachaActual = "—";
         private int _transporteSeleccionado = 0;
-        private string _recomendacion = "Usar bicicleta en trayectos cortos reduce hasta 4.6 kg de CO₂ diarios. ¡Pequeños cambios hacen grandes diferencias!";
-        private string _incentivo = "Completa 5 días en bici y desbloquea el badge 🌱 Eco Rider";
 
         public ICommand SeleccionarTransporteCommand { get; }
         public ICommand RegistrarTransporteCommand { get; }
         public ICommand VerHistorialCommand { get; }
+        public ICommand VerReportesCommand { get; }
+        public ICommand VerCamaraCommand { get; }
         public ICommand CerrarSesionCommand { get; }
 
         public ObservableCollection<HistorialItem> HistorialReciente { get; } = new();
 
         public DashboardViewModel()
         {
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (m, c, ch, e) => true
+            };
+            _http = new HttpClient(handler);
+
+            NombreUsuario = SesionUsuario.NombreCompleto;
+            TipoUsuario = SesionUsuario.TipoUsuario;
+
             SeleccionarTransporteCommand = new Command<string>(SeleccionarTransporte);
             RegistrarTransporteCommand = new Command(async () => await RegistrarTransporteAsync());
             VerHistorialCommand = new Command(async () => await Shell.Current.GoToAsync("HistorialPage"));
+            VerReportesCommand = new Command(async () => await Shell.Current.GoToAsync("ReportesPage"));
+            VerCamaraCommand = new Command(async () => await Shell.Current.GoToAsync("CamaraPage"));
             CerrarSesionCommand = new Command(async () => await CerrarSesionAsync());
-            CargarDatosMock();
+
+            _ = CargarHistorialRecienteAsync();
         }
 
         public string NombreUsuario
@@ -71,16 +105,6 @@ namespace SmartBike_Mobile.ViewModels
             get => _mensajeImpacto;
             set { _mensajeImpacto = value; OnPropertyChanged(); }
         }
-        public double BarraProgreso
-        {
-            get => _barraProgreso;
-            set { _barraProgreso = value; OnPropertyChanged(); }
-        }
-        public string PorcentajeMeta
-        {
-            get => _porcentajeMeta;
-            set { _porcentajeMeta = value; OnPropertyChanged(); }
-        }
         public string Co2Ahorrado
         {
             get => _co2Ahorrado;
@@ -101,16 +125,6 @@ namespace SmartBike_Mobile.ViewModels
             get => _rachaActual;
             set { _rachaActual = value; OnPropertyChanged(); }
         }
-        public string Recomendacion
-        {
-            get => _recomendacion;
-            set { _recomendacion = value; OnPropertyChanged(); }
-        }
-        public string Incentivo
-        {
-            get => _incentivo;
-            set { _incentivo = value; OnPropertyChanged(); }
-        }
 
         public string ColorBicicleta => _transporteSeleccionado == 1 ? "#2E7D32" : "#F1F8E9";
         public string ColorBus => _transporteSeleccionado == 2 ? "#1565C0" : "#E3F2FD";
@@ -120,6 +134,58 @@ namespace SmartBike_Mobile.ViewModels
         public string TextoBus => _transporteSeleccionado == 2 ? "White" : "#424242";
         public string TextoAuto => _transporteSeleccionado == 3 ? "White" : "#424242";
         public string TextoPie => _transporteSeleccionado == 4 ? "White" : "#424242";
+
+        private async Task CargarHistorialRecienteAsync()
+        {
+            try
+            {
+                var lista = await _http.GetFromJsonAsync<List<RegistroDiarioResponseDto>>(
+                    $"{BaseUrl}actividades/historial-usuario/{SesionUsuario.Cedula}");
+
+                if (lista != null && lista.Count > 0)
+                {
+                    HistorialReciente.Clear();
+
+                    // Calcular estadísticas desde los registros reales
+                    decimal totalCo2 = lista.Sum(r => r.Co2Generado);
+                    int diasBici = lista.Count(r => r.TransporteDetalle.ToLower().Contains("bici"));
+                    decimal co2Ahorrado = lista.Where(r => r.TransporteDetalle.ToLower().Contains("bici") ||
+                                                            r.TransporteDetalle.ToLower().Contains("pie"))
+                                               .Sum(r => r.Co2Generado == 0 ? 4.6m : 0);
+
+                    Co2Ahorrado = co2Ahorrado.ToString("0.0");
+                    DiasBicicleta = diasBici.ToString();
+                    ArbolesEquivalentes = (totalCo2 > 0 ? (int)(totalCo2 / 21.7m) : 0).ToString();
+                    RachaActual = diasBici.ToString();
+
+                    // Mostrar últimos 3
+                    foreach (var r in lista.Take(3))
+                    {
+                        HistorialReciente.Add(new HistorialItem
+                        {
+                            Icono = ObtenerIcono(r.TransporteDetalle),
+                            Transporte = r.TransporteDetalle,
+                            Fecha = r.Fecha.ToString("dd/MM/yyyy"),
+                            Co2 = r.Co2Generado.ToString("0.0")
+                        });
+                    }
+                }
+            }
+            catch
+            {
+                // Sin conexión — queda en "—"
+            }
+        }
+
+        private string ObtenerIcono(string transporte)
+        {
+            var t = transporte.ToLower();
+            if (t.Contains("bici")) return "🚲";
+            if (t.Contains("bus")) return "🚌";
+            if (t.Contains("auto") || t.Contains("car")) return "🚗";
+            if (t.Contains("pie")) return "🚶";
+            return "🚦";
+        }
 
         private void SeleccionarTransporte(string id)
         {
@@ -143,21 +209,42 @@ namespace SmartBike_Mobile.ViewModels
             var iconos = new Dictionary<int, string> { { 1, "🚲" }, { 2, "🚌" }, { 3, "🚗" }, { 4, "🚶" } };
 
             decimal co2 = co2Map[_transporteSeleccionado];
-            Co2Hoy = co2.ToString("0.0");
-            MensajeImpacto = co2 == 0
-                ? "¡Excelente! Cero emisiones hoy 🌿"
-                : $"Equivale a {(co2 / 21.7m * 365m):0.0} días de absorción de un árbol";
 
-            HistorialReciente.Insert(0, new HistorialItem
+            try
             {
-                Icono = iconos[_transporteSeleccionado],
-                Transporte = nombres[_transporteSeleccionado],
-                Fecha = DateTime.Now.ToString("dd/MM/yyyy HH:mm"),
-                Co2 = co2.ToString("0.0")
-            });
+                var dto = new RegistroDiarioCreateDto
+                {
+                    IdUsuario = SesionUsuario.Cedula,
+                    IdTipoTransporte = _transporteSeleccionado,
+                    Co2Generado = co2,
+                    Fecha = DateTime.Now
+                };
 
-            await Shell.Current.DisplayAlert("✅ Registrado",
-                $"Transporte: {nombres[_transporteSeleccionado]}\nCO₂: {co2:0.0} kg", "OK");
+                var response = await _http.PostAsJsonAsync($"{BaseUrl}actividades/registrar-viaje", dto);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Co2Hoy = co2.ToString("0.0");
+                    MensajeImpacto = co2 == 0
+                        ? "¡Excelente! Cero emisiones hoy 🌿"
+                        : $"Equivale a {(co2 / 21.7m * 365m):0.0} días de absorción de un árbol";
+
+                    await Shell.Current.DisplayAlert("✅ Registrado",
+                        $"Transporte: {nombres[_transporteSeleccionado]}\nCO₂: {co2:0.0} kg", "OK");
+
+                    // Recargar historial con datos frescos del API
+                    await CargarHistorialRecienteAsync();
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    await Shell.Current.DisplayAlert("Error", $"No se pudo registrar: {error}", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Error de conexión", ex.Message, "OK");
+            }
 
             _transporteSeleccionado = 0;
             OnPropertyChanged(nameof(ColorBicicleta)); OnPropertyChanged(nameof(ColorBus));
@@ -166,27 +253,16 @@ namespace SmartBike_Mobile.ViewModels
             OnPropertyChanged(nameof(TextoAuto)); OnPropertyChanged(nameof(TextoPie));
         }
 
-        private void CargarDatosMock()
-        {
-            Co2Ahorrado = "12.3";
-            DiasBicicleta = "8";
-            ArbolesEquivalentes = "2";
-            RachaActual = "3";
-            BarraProgreso = 120;
-            PorcentajeMeta = "44% de tu meta semanal";
-
-            HistorialReciente.Add(new HistorialItem { Icono = "🚲", Transporte = "Bicicleta", Fecha = "23/05/2026", Co2 = "0.0" });
-            HistorialReciente.Add(new HistorialItem { Icono = "🚌", Transporte = "Bus", Fecha = "22/05/2026", Co2 = "1.5" });
-            HistorialReciente.Add(new HistorialItem { Icono = "🚗", Transporte = "Auto", Fecha = "21/05/2026", Co2 = "4.6" });
-        }
-
         private async Task CerrarSesionAsync()
         {
             bool confirmar = await Shell.Current.DisplayAlert(
                 "Cerrar Sesión", "¿Estás seguro que deseas salir?", "Sí, salir", "Cancelar");
 
             if (confirmar)
-                await Shell.Current.GoToAsync("//LoginPage");
+            {
+                SesionUsuario.Cerrar();
+                await Shell.Current.GoToAsync("LoginPage");
+            }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

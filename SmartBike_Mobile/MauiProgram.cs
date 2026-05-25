@@ -23,6 +23,7 @@ public static class MauiProgram
 
         // 3. Registro de Páginas (Si usas Shell, también registra tus páginas)
         builder.Services.AddTransient<LoginPage>();
+        builder.Services.AddSingleton<ISesionService, SesionService>();
 #if DEBUG
         builder.Logging.AddDebug();
 #endif
